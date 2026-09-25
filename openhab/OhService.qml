@@ -303,6 +303,7 @@ PluginComponent {
         const locations = []
         const locByName = {}
         const equipmentByName = {}
+        let unassigned = null
 
         items.forEach(function (it) {
             if (sem(it).startsWith("Location")) {
@@ -322,10 +323,14 @@ PluginComponent {
             }
             const eq = { name: it.name, label: it.label || it.name, points: [] }
             equipmentByName[it.name] = eq
-            if (loc)
-                loc.equipment.push(eq)
-            else
-                locations.push({ name: "Unassigned", label: "Unassigned", equipment: [eq] })
+            if (!loc) {
+                if (!unassigned) {
+                    unassigned = { name: "Unassigned", label: "Unassigned", equipment: [] }
+                    locations.push(unassigned)
+                }
+                loc = unassigned
+            }
+            loc.equipment.push(eq)
         })
 
         items.forEach(function (it) {
