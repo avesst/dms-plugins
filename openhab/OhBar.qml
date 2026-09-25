@@ -438,17 +438,26 @@ PluginComponent {
                                                                     }
                                                                 }
 
+                                                                // Color-picker style: thin dark edge, white ring, light color inside,
+                                                                // so it stands out from the identically colored track beneath it.
                                                                 Rectangle {
                                                                     visible: isColorTemp
-                                                                    width: sliderHost.dragging ? 18 : 14
+                                                                    width: sliderHost.dragging ? 22 : 18
                                                                     height: width
                                                                     radius: width / 2
                                                                     anchors.verticalCenter: parent.verticalCenter
                                                                     x: track.ratio * (track.width - width)
-                                                                    color: root.kelvinColor(displayValue)
-                                                                    border.width: 2
-                                                                    border.color: Theme.outline
+                                                                    color: "white"
+                                                                    border.width: 1
+                                                                    border.color: Qt.rgba(0, 0, 0, 0.45)
                                                                     Behavior on width { NumberAnimation { duration: 100 } }
+
+                                                                    Rectangle {
+                                                                        anchors.fill: parent
+                                                                        anchors.margins: 4
+                                                                        radius: width / 2
+                                                                        color: root.kelvinColor(displayValue)
+                                                                    }
                                                                 }
 
                                                                 MouseArea {
