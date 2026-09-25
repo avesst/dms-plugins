@@ -121,7 +121,6 @@ PluginComponent {
                 if (code === 0 && t.length > 0) {
                     root.apiToken = t
                     root.tokenRetryMs = 5000
-                    root.setHealth(true, "")
                     root.poll()
                 } else {
                     root.apiToken = ""
@@ -135,7 +134,6 @@ PluginComponent {
                 if (code === 0 && t.length > 0) {
                     root.apiToken = t
                     root.tokenRetryMs = 5000
-                    root.setHealth(true, "")
                     root.poll()
                 } else {
                     root.apiToken = ""
