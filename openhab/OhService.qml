@@ -185,7 +185,7 @@ PluginComponent {
                 if (String(err).indexOf("401") >= 0 || String(err).indexOf("403") >= 0) {
                     console.log("OH daemon: auth error, refreshing token and retrying once")
                     root.refreshToken()
-                    root.retryTimer.restart()
+                    retryTimer.restart()
                 } else {
                     setHealth(false, "command failed: " + err)
                 }
