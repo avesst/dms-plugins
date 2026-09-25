@@ -124,6 +124,16 @@ PluginComponent {
         return p.label
     }
 
+    // Approximate color of a black-body light source (Tanner Helland's fit).
+    function kelvinColor(k) {
+        const t = k / 100
+        const clamp = v => Math.max(0, Math.min(255, v)) / 255
+        const r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592)
+        const g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492)
+        const b = t >= 66 ? 255 : (t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307)
+        return Qt.rgba(clamp(r), clamp(g), clamp(b), 1)
+    }
+
     // DankToggle only highlights a circle around its thumb on hover. This wrapper
     // takes hover and clicks over the whole track and draws one uniform highlight.
     component OhToggle: Item {
@@ -405,12 +415,43 @@ PluginComponent {
                                                                 }
 
                                                                 StyledRect {
+                                                                    visible: !isColorTemp
                                                                     anchors.left: parent.left
                                                                     anchors.top: parent.top
                                                                     anchors.bottom: parent.bottom
                                                                     width: track.ratio * track.width
                                                                     radius: height / 2
                                                                     color: Theme.primary
+                                                                }
+
+                                                                // Color temperature: the full warm-to-cool range faintly,
+                                                                // with the part up to the current value at full strength.
+                                                                Rectangle {
+                                                                    visible: isColorTemp
+                                                                    anchors.fill: parent
+                                                                    radius: height / 2
+                                                                    opacity: 0.35
+                                                                    gradient: Gradient {
+                                                                        orientation: Gradient.Horizontal
+                                                                        GradientStop { position: 0; color: root.kelvinColor(sliderMin) }
+                                                                        GradientStop { position: 0.5; color: root.kelvinColor((sliderMin + sliderMax) / 2) }
+                                                                        GradientStop { position: 1; color: root.kelvinColor(sliderMax) }
+                                                                    }
+                                                                }
+
+                                                                Rectangle {
+                                                                    visible: isColorTemp
+                                                                    anchors.left: parent.left
+                                                                    anchors.top: parent.top
+                                                                    anchors.bottom: parent.bottom
+                                                                    width: track.ratio * track.width
+                                                                    radius: height / 2
+                                                                    gradient: Gradient {
+                                                                        orientation: Gradient.Horizontal
+                                                                        GradientStop { position: 0; color: root.kelvinColor(sliderMin) }
+                                                                        GradientStop { position: 0.5; color: root.kelvinColor((sliderMin + displayValue) / 2) }
+                                                                        GradientStop { position: 1; color: root.kelvinColor(displayValue) }
+                                                                    }
                                                                 }
 
                                                                 MouseArea {
