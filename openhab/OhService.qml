@@ -219,15 +219,17 @@ PluginComponent {
         })
     }
 
-    function sendCommand(itemName, value) {
+    function sendCommand(itemName, value, isRetry) {
         console.log("OH daemon: POST " + itemName + " = " + value)
-        root.pendingRetryItem = itemName
-        root.pendingRetryValue = value
         api("POST", "/rest/items/" + encodeURIComponent(itemName), value, (err) => {
             if (err) {
                 console.log("OH daemon: POST failed: " + err)
-                if (String(err).indexOf("401") >= 0 || String(err).indexOf("403") >= 0) {
+                const authError = String(err).indexOf("401") >= 0 || String(err).indexOf("403") >= 0
+                if (authError && !isRetry) {
                     console.log("OH daemon: auth error, refreshing token and retrying once")
+                    const next = Object.assign({}, root.pendingRetries)
+                    next[itemName] = value
+                    root.pendingRetries = next
                     root.refreshToken()
                     retryTimer.restart()
                 } else {
@@ -240,16 +242,18 @@ PluginComponent {
         })
     }
 
-    property string pendingRetryItem: ""
-    property string pendingRetryValue: ""
+    // Commands that failed auth, keyed by item (latest value wins), resent
+    // once after the token has been refreshed.
+    property var pendingRetries: ({})
 
     Timer {
         id: retryTimer
         interval: 1500
         onTriggered: {
-            if (root.pendingRetryItem.length > 0)
-                root.sendCommand(root.pendingRetryItem, root.pendingRetryValue)
-            root.pendingRetryItem = ""
+            const pending = root.pendingRetries
+            root.pendingRetries = {}
+            for (const item in pending)
+                root.sendCommand(item, pending[item], true)
         }
     }
 
