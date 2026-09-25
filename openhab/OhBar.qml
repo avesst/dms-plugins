@@ -43,19 +43,6 @@ PluginComponent {
     }
 
     readonly property bool connected: health.ok === true
-    readonly property int lightsOn: {
-        let n = 0
-        const locs = root.model.locations || []
-        for (let i = 0; i < locs.length; i++)
-            for (let j = 0; j < (locs[i].equipment || []).length; j++)
-                for (let k = 0; k < (locs[i].equipment[j].points || []).length; k++) {
-                    const p = locs[i].equipment[j].points[k]
-                    // a Dimmer's state is a percentage, not ON/OFF
-                    if ((p.kind === "switch" && p.state === "ON") || (p.kind === "dimmer" && parseFloat(p.state) > 0))
-                        n++
-                }
-        return n
-    }
 
     // Split an equipment's points into: primary power switch, remaining
     // control rows (dimmers first, then ranges), and a read-only info line.
@@ -185,7 +172,7 @@ PluginComponent {
         DankIcon {
             name: "home"
             size: root.pillIconSize
-            color: root.connected && root.lightsOn > 0 ? Theme.primary : Theme.surfaceVariantText
+            color: Theme.surfaceVariantText
         }
     }
 
@@ -193,7 +180,7 @@ PluginComponent {
         DankIcon {
             name: "home"
             size: root.pillIconSize
-            color: root.connected && root.lightsOn > 0 ? Theme.primary : Theme.surfaceVariantText
+            color: Theme.surfaceVariantText
         }
     }
 
