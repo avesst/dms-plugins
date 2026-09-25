@@ -124,6 +124,38 @@ PluginComponent {
         return p.label
     }
 
+    // DankToggle only highlights a circle around its thumb on hover. This wrapper
+    // takes hover and clicks over the whole track and draws one uniform highlight.
+    component OhToggle: Item {
+        id: ohToggle
+        property bool checked: false
+        signal toggled(bool checked)
+        width: toggleVisual.width
+        height: toggleVisual.height
+
+        DankToggle {
+            id: toggleVisual
+            checked: ohToggle.checked
+            hideText: true
+        }
+
+        Rectangle {
+            anchors.fill: toggleVisual
+            radius: height / 2
+            color: ohToggle.checked ? Theme.onPrimary : Theme.surfaceText
+            opacity: toggleMouse.pressed ? Theme.stateLayerPressed : (toggleMouse.containsMouse ? Theme.stateLayerHover : 0)
+            Behavior on opacity { NumberAnimation { duration: 120 } }
+        }
+
+        MouseArea {
+            id: toggleMouse
+            anchors.fill: toggleVisual
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: ohToggle.toggled(!ohToggle.checked)
+        }
+    }
+
     function send(itemName, value) {
         const next = Object.assign({}, root.optimistic)
         next[itemName] = { value: value, at: Date.now() }
@@ -244,12 +276,11 @@ PluginComponent {
                                                     width: parent.width - (eqCard.parts.power ? 70 : 0)
                                                 }
 
-                                                DankToggle {
+                                                OhToggle {
                                                     visible: eqCard.parts.power !== null
                                                     anchors.right: parent.right
                                                     anchors.verticalCenter: parent.verticalCenter
-                                                    checked: eqCard.parts.power ? root.effectiveState(eqCard.parts.power) === "ON" : false
-                                                    hideText: true
+                                                    checked: eqCard.powerOn
                                                     onToggled: checked => root.send(eqCard.parts.power.name, checked ? "ON" : "OFF")
                                                 }
                                             }
@@ -283,11 +314,10 @@ PluginComponent {
                                                                 width: parent.width - 70
                                                             }
 
-                                                            DankToggle {
+                                                            OhToggle {
                                                                 anchors.right: parent.right
                                                                 anchors.verticalCenter: parent.verticalCenter
                                                                 checked: root.effectiveState(rowLoader.p) === "ON"
-                                                                hideText: true
                                                                 onToggled: checked => root.send(rowLoader.p.name, checked ? "ON" : "OFF")
                                                             }
                                                         }
