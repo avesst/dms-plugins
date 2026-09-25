@@ -128,7 +128,7 @@ PluginComponent {
     function sliderLabel(p) {
         if (p.kind === "dimmer")
             return "Brightness"
-        if (p.kind === "range" && /color/i.test(p.label))
+        if (p.colorTemp)
             return "Color"
         return p.label
     }
@@ -306,11 +306,14 @@ PluginComponent {
                                                             width: rowLoader.width
                                                             height: 20
 
-                                                            // Color temp items are mireds (lamp-native).
-                                                            // Display Kelvin instead: K = 1e6 / mired.
-                                                            readonly property bool isColorTemp: rowLoader.p.kind === "range" && /color|temp/i.test(rowLoader.p.label)
-                                                            readonly property int sliderMin: isColorTemp ? 2200 : Math.round(rowLoader.p.min)
-                                                            readonly property int sliderMax: isColorTemp ? 6500 : Math.round(rowLoader.p.max)
+                                                            // Color temperature (from the item's semantic property) is shown in Kelvin.
+                                                            // Mired items are converted (K = 1e6 / mired), so their range inverts.
+                                                            readonly property bool isColorTemp: rowLoader.p.colorTemp === true
+                                                            readonly property bool isMired: isColorTemp && rowLoader.p.ctUnit === "mired"
+                                                            readonly property int sliderMin: isMired
+                                                                ? Math.round(1000000 / rowLoader.p.max / sliderStep) * sliderStep : Math.round(rowLoader.p.min)
+                                                            readonly property int sliderMax: isMired
+                                                                ? Math.round(1000000 / Math.max(1, rowLoader.p.min) / sliderStep) * sliderStep : Math.round(rowLoader.p.max)
                                                             readonly property int sliderStep: isColorTemp ? 100 : 1
                                                             readonly property string unit: rowLoader.p.kind === "dimmer" ? "%" : (isColorTemp ? "K" : "")
 
@@ -318,17 +321,15 @@ PluginComponent {
                                                                 const v = parseFloat(raw)
                                                                 if (isNaN(v))
                                                                     return sliderMin
-                                                                if (isColorTemp) {
-                                                                    const k = Math.round(1000000 / v / sliderStep) * sliderStep
-                                                                    return Math.max(sliderMin, Math.min(sliderMax, k))
-                                                                }
-                                                                return Math.round(v)
+                                                                const shown = isMired ? 1000000 / Math.max(1, v) : v
+                                                                const stepped = Math.round(shown / sliderStep) * sliderStep
+                                                                return isColorTemp ? Math.max(sliderMin, Math.min(sliderMax, stepped)) : stepped
                                                             }
 
                                                             function fromSlider(shown) {
-                                                                if (isColorTemp) {
+                                                                if (isMired) {
                                                                     const m = Math.round(1000000 / Math.max(1, shown))
-                                                                    return String(Math.max(153, Math.min(454, m)))
+                                                                    return String(Math.max(rowLoader.p.min, Math.min(rowLoader.p.max, m)))
                                                                 }
                                                                 return String(shown)
                                                             }

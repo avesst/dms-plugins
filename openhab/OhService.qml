@@ -238,6 +238,12 @@ PluginComponent {
         const type = String(it.type || "")
         const readOnly = sd.readOnly === true
         const hasRange = sd.minimum !== undefined && sd.minimum !== null && sd.maximum !== undefined && sd.maximum !== null
+        const semCfg = (it.metadata && it.metadata.semantics && it.metadata.semantics.config) || {}
+        const colorTemp = semCfg.relatesTo === "Property_ColorTemperature"
+        // Color temperature items are either mireds (zigbee2mqtt/Hue native) or Kelvin; Kelvin
+        // values are always > 1000, mireds are not.
+        const kelvin = colorTemp && (/\bK\b/.test(String(it.state)) || /\bK\b/.test(String(sd.pattern || ""))
+            || (hasRange && Number(sd.maximum) > 1000))
         let kind = "text"
         if (type === "Switch" && !readOnly)
             kind = "switch"
@@ -253,7 +259,9 @@ PluginComponent {
             state: it.state === null || it.state === undefined ? "-" : String(it.state),
             min: hasRange ? Number(sd.minimum) : 0,
             max: hasRange ? Number(sd.maximum) : 100,
-            readOnly: readOnly
+            readOnly: readOnly,
+            colorTemp: colorTemp,
+            ctUnit: colorTemp ? (kelvin ? "K" : "mired") : ""
         }
     }
 
