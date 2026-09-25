@@ -14,8 +14,9 @@ to the DMS plugin store through the registry entries in `plugins/` (root level, 
 
 A composite plugin (daemon + bar widget):
 
-- **Daemon** polls `GET /rest/items?metadata=semantics`, builds the
-  Locations → Equipment → Points tree and publishes it to shared global vars.
+- **Daemon** polls `GET /rest/items?metadata=semantics` while the popout is
+  open, builds the Locations → Equipment → Points tree and publishes it to
+  shared global vars. While closed it only checks the connection every 30s.
 - **Bar widget** shows a lightbulb pill (count of lights on) with a popout
   panel: power toggles for switches/dimmers, handle-less sliders for brightness
   (percent) and color temperature (displayed in Kelvin, converted to/from the
@@ -62,7 +63,7 @@ the plugin settings).
 | Key | Default | Meaning |
 |---|---|---|
 | `baseUrl` | `http://localhost:8080` | openHAB base URL |
-| `pollSeconds` | `5` | Poll interval for item states |
+| `pollSeconds` | `2` | Refresh interval for item states while the popout is open |
 | `tokenSource` | `keyring` | `keyring` or `file` |
 | `keyringAttrs` | `service openhab` | `secret-tool lookup` attributes |
 | `tokenFile` | `~/.config/openhab/token` | Fallback token file |

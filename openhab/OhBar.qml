@@ -205,6 +205,11 @@ PluginComponent {
             headerText: ""
             detailsText: ""
 
+            // Tell the daemon to refresh item states only while the panel is shown.
+            readonly property bool panelShown: parentPopout ? parentPopout.shouldBeVisible === true : false
+            onPanelShownChanged: PluginService.setGlobalVar(root.pluginId, "ohPanelOpen", panelShown)
+            Component.onDestruction: PluginService.setGlobalVar(root.pluginId, "ohPanelOpen", false)
+
             Item {
                 id: flickHost
                 width: parent.width

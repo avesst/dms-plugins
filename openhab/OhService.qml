@@ -13,7 +13,7 @@ PluginComponent {
 
     // ---- settings (persisted by OhSettings.qml) ----
     readonly property string baseUrl: String(pluginData.baseUrl || "http://localhost:8080").replace(/\/+$/, "")
-    readonly property int pollSeconds: pluginData.pollSeconds || 5
+    readonly property int pollSeconds: pluginData.pollSeconds || 2
     readonly property bool useKeyring: (pluginData.tokenSource || "keyring") === "keyring"
     readonly property string keyringAttrs: pluginData.keyringAttrs || "service openhab"
     readonly property string tokenFile: pluginData.tokenFile || "~/.config/openhab/token"
@@ -23,13 +23,18 @@ PluginComponent {
     property bool pollBusy: false
     property int lastCmdSeq: 0
 
+    // Item states are only needed while the panel is open; otherwise just a
+    // periodic connection check keeps the health state (and the pill) current.
+    property bool panelOpen: false
+    readonly property int healthCheckSeconds: 30
+
     Timer {
         id: pollTimer
-        interval: Math.max(1, root.pollSeconds) * 1000
+        interval: (root.panelOpen ? Math.max(1, root.pollSeconds) : root.healthCheckSeconds) * 1000
         repeat: true
         running: false
         triggeredOnStart: false
-        onTriggered: root.poll()
+        onTriggered: root.panelOpen ? root.poll() : root.checkHealth()
     }
 
     // short-delay poll after sending a command so the UI catches up quickly
@@ -53,7 +58,16 @@ PluginComponent {
     Connections {
         target: PluginService
         function onGlobalVarChanged(pluginId, varName) {
-            if (pluginId !== root.pluginId || varName !== "ohCommand")
+            if (pluginId !== root.pluginId)
+                return
+            if (varName === "ohPanelOpen") {
+                root.panelOpen = PluginService.getGlobalVar(root.pluginId, "ohPanelOpen", false) === true
+                if (root.panelOpen)
+                    root.poll()
+                pollTimer.restart()
+                return
+            }
+            if (varName !== "ohCommand")
                 return
             try {
                 const cmd = JSON.parse(PluginService.getGlobalVar(root.pluginId, "ohCommand", "{}"))
@@ -172,21 +186,31 @@ PluginComponent {
         return xhr
     }
 
-    // XMLHttpRequest has no timeout, so a stalled poll would keep pollBusy set
-    // forever. Abort it once it is older than this; pollGen makes the aborted
-    // request's callback a no-op.
+    // XMLHttpRequest has no timeout, so a stalled request would keep pollBusy
+    // set forever. Abort it once it is older than this; pollGen makes the
+    // aborted request's callback a no-op.
     readonly property int pollTimeoutMs: 15000
     property var pollXhr: null
     property real pollStartedAt: 0
     property int pollGen: 0
 
+    // Full item model, for the panel.
     function poll() {
+        root.request("/rest/items?metadata=semantics", text => root.publishModel(JSON.parse(text)))
+    }
+
+    // Small authenticated request: verifies reachability and the token.
+    function checkHealth() {
+        root.request("/rest/items?fields=name", null)
+    }
+
+    function request(path, onData) {
         if (root.apiToken.length === 0)
             return
         if (root.pollBusy) {
             if (Date.now() - root.pollStartedAt < root.pollTimeoutMs)
                 return
-            console.log("OH daemon: poll timed out, aborting")
+            console.log("OH daemon: request timed out, aborting")
             const stale = root.pollXhr
             root.pollGen++
             root.pollBusy = false
@@ -199,7 +223,7 @@ PluginComponent {
         const gen = ++root.pollGen
         root.pollBusy = true
         root.pollStartedAt = Date.now()
-        root.pollXhr = api("GET", "/rest/items?metadata=semantics", null, (err, text) => {
+        root.pollXhr = api("GET", path, null, (err, text) => {
             if (gen !== root.pollGen)
                 return
             root.pollBusy = false
@@ -209,7 +233,8 @@ PluginComponent {
                 return
             }
             try {
-                root.publishModel(JSON.parse(text))
+                if (onData)
+                    onData(text)
                 root.setHealth(true, "")
             } catch (e) {
                 root.setHealth(false, "bad response: " + e)

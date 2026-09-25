@@ -48,11 +48,11 @@ PluginSettings {
 
     SliderSetting {
         settingKey: "pollSeconds"
-        label: "Poll interval"
-        description: "Seconds between item refreshes"
-        defaultValue: 5
+        label: "Refresh interval"
+        description: "Seconds between item refreshes while the panel is open (connection is checked every 30s otherwise)"
+        defaultValue: 2
         minimum: 1
-        maximum: 60
+        maximum: 30
     }
 
     SelectionSetting {
