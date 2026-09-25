@@ -171,14 +171,41 @@ PluginComponent {
             }
         }
         xhr.send(body === undefined ? null : body)
+        return xhr
     }
 
+    // XMLHttpRequest has no timeout, so a stalled poll would keep pollBusy set
+    // forever. Abort it once it is older than this; pollGen makes the aborted
+    // request's callback a no-op.
+    readonly property int pollTimeoutMs: 15000
+    property var pollXhr: null
+    property real pollStartedAt: 0
+    property int pollGen: 0
+
     function poll() {
-        if (root.pollBusy || root.apiToken.length === 0)
+        if (root.apiToken.length === 0)
             return
-        root.pollBusy = true
-        api("GET", "/rest/items?metadata=semantics", null, (err, text) => {
+        if (root.pollBusy) {
+            if (Date.now() - root.pollStartedAt < root.pollTimeoutMs)
+                return
+            console.log("OH daemon: poll timed out, aborting")
+            const stale = root.pollXhr
+            root.pollGen++
             root.pollBusy = false
+            root.pollXhr = null
+            root.setHealth(false, "openHAB request timed out")
+            if (stale)
+                stale.abort()
+            return
+        }
+        const gen = ++root.pollGen
+        root.pollBusy = true
+        root.pollStartedAt = Date.now()
+        root.pollXhr = api("GET", "/rest/items?metadata=semantics", null, (err, text) => {
+            if (gen !== root.pollGen)
+                return
+            root.pollBusy = false
+            root.pollXhr = null
             if (err) {
                 root.setHealth(false, err)
                 return
