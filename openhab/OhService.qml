@@ -53,7 +53,6 @@ PluginComponent {
     Connections {
         target: PluginService
         function onGlobalVarChanged(pluginId, varName) {
-            console.log("OH daemon: globalVarChanged " + pluginId + "/" + varName)
             if (pluginId !== root.pluginId || varName !== "ohCommand")
                 return
             try {
@@ -151,7 +150,6 @@ PluginComponent {
             cb("no token loaded yet")
             return
         }
-        console.log("OH daemon: api " + method + " " + path)
         const xhr = new XMLHttpRequest()
         xhr.open(method, root.baseUrl + path)
         xhr.setRequestHeader("Authorization", "Bearer " + root.apiToken)
