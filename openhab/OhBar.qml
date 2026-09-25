@@ -214,6 +214,7 @@ PluginComponent {
                                         required property var modelData
                                         readonly property var eq: modelData
                                         readonly property var parts: root.partition(eq.points || [])
+                                        readonly property bool powerOn: parts.power !== null && root.effectiveState(parts.power) === "ON"
                                         width: parent.width
                                         height: cardCol.height + Theme.spacingM * 2
                                         color: Theme.surfaceContainerHigh
@@ -299,6 +300,10 @@ PluginComponent {
                                                             id: sliderHost
                                                             width: rowLoader.width
                                                             height: 20
+                                                            // Dimmed, not disabled: setting a level still turns the lamp on.
+                                                            // Full strength while hovered/dragged so the value bubble stays legible.
+                                                            opacity: eqCard.parts.power !== null && !eqCard.powerOn && !showBubble ? 0.45 : 1
+                                                            Behavior on opacity { NumberAnimation { duration: 150 } }
 
                                                             // Color temperature (from the item's semantic property) is shown in Kelvin.
                                                             // Mired items are converted (K = 1e6 / mired), so their range inverts.
