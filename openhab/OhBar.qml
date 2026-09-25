@@ -50,7 +50,8 @@ PluginComponent {
             for (let j = 0; j < (locs[i].equipment || []).length; j++)
                 for (let k = 0; k < (locs[i].equipment[j].points || []).length; k++) {
                     const p = locs[i].equipment[j].points[k]
-                    if ((p.kind === "switch" || p.kind === "dimmer") && p.state === "ON")
+                    // a Dimmer's state is a percentage, not ON/OFF
+                    if ((p.kind === "switch" && p.state === "ON") || (p.kind === "dimmer" && parseFloat(p.state) > 0))
                         n++
                 }
         return n
