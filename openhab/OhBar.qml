@@ -424,13 +424,12 @@ PluginComponent {
                                                                     color: Theme.primary
                                                                 }
 
-                                                                // Color temperature: the full warm-to-cool range faintly,
-                                                                // with the part up to the current value at full strength.
+                                                                // Color temperature: the full warm-to-cool range as the track, with a
+                                                                // marker in the light's actual color at the current value.
                                                                 Rectangle {
                                                                     visible: isColorTemp
                                                                     anchors.fill: parent
                                                                     radius: height / 2
-                                                                    opacity: 0.35
                                                                     gradient: Gradient {
                                                                         orientation: Gradient.Horizontal
                                                                         GradientStop { position: 0; color: root.kelvinColor(sliderMin) }
@@ -441,17 +440,15 @@ PluginComponent {
 
                                                                 Rectangle {
                                                                     visible: isColorTemp
-                                                                    anchors.left: parent.left
-                                                                    anchors.top: parent.top
-                                                                    anchors.bottom: parent.bottom
-                                                                    width: track.ratio * track.width
-                                                                    radius: height / 2
-                                                                    gradient: Gradient {
-                                                                        orientation: Gradient.Horizontal
-                                                                        GradientStop { position: 0; color: root.kelvinColor(sliderMin) }
-                                                                        GradientStop { position: 0.5; color: root.kelvinColor((sliderMin + displayValue) / 2) }
-                                                                        GradientStop { position: 1; color: root.kelvinColor(displayValue) }
-                                                                    }
+                                                                    width: sliderHost.dragging ? 18 : 14
+                                                                    height: width
+                                                                    radius: width / 2
+                                                                    anchors.verticalCenter: parent.verticalCenter
+                                                                    x: track.ratio * (track.width - width)
+                                                                    color: root.kelvinColor(displayValue)
+                                                                    border.width: 2
+                                                                    border.color: Theme.outline
+                                                                    Behavior on width { NumberAnimation { duration: 100 } }
                                                                 }
 
                                                                 MouseArea {
@@ -505,7 +502,7 @@ PluginComponent {
                                                                         anchors.topMargin: -3
                                                                         anchors.bottomMargin: -3
                                                                         radius: height / 2
-                                                                        color: Theme.primary
+                                                                        color: isColorTemp ? root.kelvinColor(displayValue) : Theme.primary
                                                                         opacity: 0.9
                                                                     }
 
@@ -516,7 +513,8 @@ PluginComponent {
                                                                         StyledText {
                                                                             text: sliderHost.displayValue + sliderHost.unit
                                                                             font.pixelSize: Theme.fontSizeSmall - 1
-                                                                            color: Theme.background
+                                                                            // light colors are all pale, so dark text reads on every one
+                                                                            color: isColorTemp ? Qt.rgba(0, 0, 0, 0.87) : Theme.background
                                                                             anchors.verticalCenter: parent.verticalCenter
                                                                         }
                                                                     }
