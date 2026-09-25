@@ -57,16 +57,6 @@ PluginComponent {
         return n
     }
 
-    readonly property string healthLine: {
-        const h = root.health
-        if (h.ok === false)
-            return "⚠ " + (h.detail || "openHAB unreachable")
-        if (h.ok === undefined)
-            return "Waiting for daemon…"
-        const locs = (root.model.locations || []).length
-        return "Connected · " + locs + (locs === 1 ? " location" : " locations")
-    }
-
     // Split an equipment's points into: primary power switch, remaining
     // control rows (dimmers first, then ranges), and a read-only info line.
     function partition(points) {
