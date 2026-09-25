@@ -1,0 +1,22 @@
+{
+    "id": "openhabHub",
+    "name": "openHAB Hub",
+    "capabilities": [
+        "daemon",
+        "dankbar-widget"
+    ],
+    "category": "utilities",
+    "repo": "https://github.com/avesst/dms-plugins",
+    "path": "openhab",
+    "author": "avesst",
+    "description": "Control an openHAB smart home from the DankBar. Auto-populated from the openHAB semantic model: locations, equipment and points as toggles and sliders.",
+    "dependencies": [],
+    "compositors": [
+        "niri",
+        "hyprland"
+    ],
+    "distro": [
+        "any"
+    ],
+    "screenshot": "https://raw.githubusercontent.com/avesst/dms-plugins/main/screenshots/oh-hub.png"
+}

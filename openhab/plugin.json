@@ -1,0 +1,18 @@
+{
+    "$schema": "https://raw.githubusercontent.com/AvengeMedia/DankMaterialShell/master/quickshell/PLUGINS/plugin-schema.json",
+    "id": "openhabHub",
+    "name": "openHAB Hub",
+    "description": "Control your openHAB smart home from the DankBar. Auto-populated from the openHAB semantic model: locations, equipment and points appear as toggles and sliders, live-updated.",
+    "version": "0.1.0",
+    "author": "avesst",
+    "type": "composite",
+    "capabilities": ["daemon", "dankbar-widget"],
+    "components": {
+        "daemon": "./OhService.qml",
+        "widget": "./OhBar.qml"
+    },
+    "settings": "./OhSettings.qml",
+    "icon": "home",
+    "requires_dms": ">=1.5.0",
+    "permissions": ["settings_read", "settings_write"]
+}
