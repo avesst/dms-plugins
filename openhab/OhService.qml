@@ -97,6 +97,21 @@ PluginComponent {
     // Token is never stored in DMS settings (settings.json is plaintext).
     // It is fetched at runtime from the keyring (secret-tool) or a user file.
 
+    // A failed lookup (e.g. keyring still locked at login) is retried with
+    // backoff so the plugin recovers without a settings change or restart.
+    property int tokenRetryMs: 5000
+
+    Timer {
+        id: tokenRetry
+        onTriggered: root.refreshToken()
+    }
+
+    function scheduleTokenRetry() {
+        tokenRetry.interval = root.tokenRetryMs
+        tokenRetry.restart()
+        root.tokenRetryMs = Math.min(root.tokenRetryMs * 2, 300000)
+    }
+
     function refreshToken() {
         console.log("OH daemon: refreshing token (source=" + (root.useKeyring ? "keyring" : "file") + ")")
         if (root.useKeyring) {
@@ -105,10 +120,12 @@ PluginComponent {
                 const t = out.trim()
                 if (code === 0 && t.length > 0) {
                     root.apiToken = t
+                    root.tokenRetryMs = 5000
                     root.setHealth(true, "")
                     root.poll()
                 } else {
                     root.apiToken = ""
+                    root.scheduleTokenRetry()
                     root.setHealth(false, "No token from keyring. Store it: secret-tool store --label='openHAB API' service openhab account oh")
                 }
             }, 0)
@@ -117,10 +134,12 @@ PluginComponent {
                 const t = out.trim()
                 if (code === 0 && t.length > 0) {
                     root.apiToken = t
+                    root.tokenRetryMs = 5000
                     root.setHealth(true, "")
                     root.poll()
                 } else {
                     root.apiToken = ""
+                    root.scheduleTokenRetry()
                     root.setHealth(false, "Token file missing/unreadable: " + root.tokenFile)
                 }
             }, 0)
