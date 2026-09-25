@@ -175,13 +175,16 @@ PluginComponent {
             Item {
                 id: flickHost
                 width: parent.width
-                height: innerCol.y + innerCol.height + Theme.spacingM
+                // PluginPopout sizes the popout from this implicit height, so cap it
+                // here and let the flickable scroll the rest.
+                readonly property int fullHeight: innerCol.y + innerCol.height + Theme.spacingM
+                height: Math.min(fullHeight, 820 - popRoot.headerHeight - popRoot.detailsHeight)
 
                 DankFlickable {
                     id: flick
                     anchors.fill: parent
                     clip: true
-                    contentHeight: flickHost.height
+                    contentHeight: flickHost.fullHeight
 
                     Column {
                         id: innerCol
