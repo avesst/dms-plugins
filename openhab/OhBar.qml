@@ -141,7 +141,7 @@ PluginComponent {
 
     horizontalBarPill: Component {
         DankIcon {
-            name: root.connected ? "home" : "cloud_off"
+            name: "home"
             size: root.pillIconSize
             color: root.connected && root.lightsOn > 0 ? Theme.primary : Theme.surfaceVariantText
         }
@@ -149,7 +149,7 @@ PluginComponent {
 
     verticalBarPill: Component {
         DankIcon {
-            name: root.connected ? "home" : "cloud_off"
+            name: "home"
             size: root.pillIconSize
             color: root.connected && root.lightsOn > 0 ? Theme.primary : Theme.surfaceVariantText
         }
